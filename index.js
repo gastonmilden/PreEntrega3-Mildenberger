@@ -1,4 +1,6 @@
-const alarms = [];
+
+
+let alarms = {};
 
 getElement = (id) => document.getElementById(id);
 createElement = (tag) => document.createElement(tag);
@@ -12,12 +14,13 @@ class Clock {
 
     build = () => {
         const clockElement = getElement("digital-clock");
-        const time = this.toLocaleTimeString(new Date);
+        const time = this.toLocaleTimeString(new Date());
         clockElement.innerHTML = time;
-        this.checkAlarms(time);
+        this.checkAlarms(time); // Verifica las alarmas en cada actualización de tiempo.
     }
 
     clearForm = () => {
+        getElement("alarm-name").value = "";
         getElement("hour").value = "";
         getElement("minute").value = "";
         getElement("hour").focus();
@@ -26,6 +29,7 @@ class Clock {
     addAlarm = () => {
         const hour = parseInt(getElement("hour").value);
         const minute = parseInt(getElement("minute").value);
+        const alarmName = getElement("alarm-name").value;
     
         if (isNaN(hour) || isNaN(minute) || hour < 0 || hour > 23 || minute < 0 || minute > 59) {
             alert("Ingrese una hora y minutos válidos (0-23 horas y 0-59 minutos).");
@@ -37,38 +41,90 @@ class Clock {
         date.setMinutes(minute);
         date.setSeconds(0);
     
-        alarms.push(date);
+        alarms[alarmName] = date;
         localStorage.setItem("alarms", JSON.stringify(alarms));
     
         this.clearForm();
         this.displayAlarms();
     }
 
-    renderAlarm = (alarm, alarmList) => {
+    deleteAlarm = (alarmName) => {
+        if (alarms.hasOwnProperty(alarmName)) {
+            delete alarms[alarmName];
+            localStorage.setItem("alarms", JSON.stringify(alarms));
+            this.displayAlarms();
+        }
+    }
+
+    renderAlarm = (alarmName, alarmTime, alarmList) => {
         const li = createElement("li");
-        li.innerHTML = `Alarma lista: ${this.toLocaleTimeString(alarm)}`;
+        li.innerHTML = `Alarma: ${alarmName}, Hora: ${this.toLocaleTimeString(alarmTime)}`;
+        
+        // Agregar botón de editar
+        const editButton = createElement("button");
+        editButton.textContent = "Editar";
+        editButton.addEventListener("click", () => {
+            getElement("hour").value = alarmTime.getHours();
+            getElement("minute").value = alarmTime.getMinutes();
+            getElement("alarm-name").value = alarmName;
+            this.editAlarm(alarmName);
+        });
+
+        const deleteButton = createElement("button");
+        deleteButton.textContent = "Eliminar";
+        deleteButton.addEventListener("click", () => {
+            this.deleteAlarm(alarmName);
+        });
+
+        li.appendChild(editButton);
+        li.appendChild(deleteButton);
+
         alarmList.appendChild(li);
     }
 
     displayAlarms = () => {
-        alarms.sort((d1, d2) => d1 - d2);
         const alarmList = getElement("alarm-list");
         alarmList.innerHTML = "";
+    
+        for (const alarmName in alarms) {
+            const alarmTime = alarms[alarmName];
+            this.renderAlarm(alarmName, alarmTime, alarmList);
+        }
+    }
 
-        alarms.forEach((alarmTime) => {
-            this.renderAlarm(alarmTime, alarmList);
-        });
+    editAlarm = (alarmName) => {
+        const newHour = parseInt(getElement("hour").value);
+        const newMinute = parseInt(getElement("minute").value);
+        const newAlarmName = getElement("alarm-name").value;
+    
+        if (isNaN(newHour) || isNaN(newMinute) || newHour < 0 || newHour > 23 || newMinute < 0 || newMinute > 59) {
+            alert("Ingrese una hora y minutos válidos (0-23 horas y 0-59 minutos).");
+            return;
+        }
+    
+        const date = new Date();
+        date.setHours(newHour);
+        date.setMinutes(newMinute);
+        date.setSeconds(0);
+    
+        alarms[newAlarmName] = date;
+        delete alarms[alarmName];
+        localStorage.setItem("alarms", JSON.stringify(alarms));
+    
+        this.clearForm();
+        this.displayAlarms();
     }
 
     checkAlarms = (time) => {
-        for (let index = 0; index < alarms.length; index++) {
-            const alarm = this.toLocaleTimeString(alarms[index]);
-            if (alarm === time){
-                alarms.splice(index, 1);
-                this.displayAlarms();
-                alert(`Wake Up! Son las ${alarm}!`);
+        for (const alarmName in alarms) {
+            const alarmTime = alarms[alarmName];
+            if (this.toLocaleTimeString(alarmTime) === time) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Wake Up!',
+                    text: `Es hora de ${alarmName}.`,
+                });
             }
-            
         }
     }
 
@@ -79,3 +135,6 @@ class Clock {
 
 const clock = new Clock;
 clock.init();
+
+
+
