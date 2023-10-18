@@ -16,7 +16,7 @@ class Clock {
         const clockElement = getElement("digital-clock");
         const time = this.toLocaleTimeString(new Date());
         clockElement.innerHTML = time;
-        this.checkAlarms(time); // Verifica las alarmas en cada actualización de tiempo.
+        this.checkAlarms(time);
     }
 
     clearForm = () => {
@@ -137,4 +137,41 @@ const clock = new Clock;
 clock.init();
 
 
+const apiKey = '87cb074b6cccb8f74777bf23a024f7aa';
 
+class WeatherApp {
+    constructor() {
+        this.weatherData = null;
+        this.init();
+    }
+
+    init() {
+        this.fetchWeatherData();
+    }
+
+    fetchWeatherData() {
+        const city = 'Buenos Aires,ar';
+        const apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric&lang=es`;
+
+        fetch(apiUrl)
+            .then((response) => response.json())
+            .then((data) => {
+                this.weatherData = data;
+                this.displayWeatherData();
+            })
+            .catch((error) => {
+                console.error('Error al recuperar datos del clima:', error);
+            });
+    }
+
+    displayWeatherData() {
+        const temperature = this.weatherData.main.temp;
+        const description = this.weatherData.weather[0].description;
+    
+        const weatherInfoElement = document.getElementById('weather-info');
+        weatherInfoElement.innerHTML = `En Buenos Aires, Argentina, la temperatura es de ${temperature}°C y el clima es ${description}.`;
+    }
+}
+
+const weatherApp = new WeatherApp;
+weatherApp.init();
