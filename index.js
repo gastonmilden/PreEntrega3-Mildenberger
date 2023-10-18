@@ -165,11 +165,11 @@ class WeatherApp {
     }
 
     displayWeatherData() {
-        const temperature = this.weatherData.main.temp;
+        const temperature = this.weatherData.main.temp.toFixed(1);
         const description = this.weatherData.weather[0].description;
     
         const weatherInfoElement = document.getElementById('weather-info');
-        weatherInfoElement.innerHTML = `En Buenos Aires, Argentina, la temperatura es de ${temperature}°C y el clima es ${description}.`;
+        weatherInfoElement.innerHTML = `En Buenos Aires, Argentina, la temperatura es de ${temperature}°C y hay ${description}.`;
     }
 }
 
